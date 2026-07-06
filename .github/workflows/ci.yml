@@ -1,0 +1,66 @@
+name: rv32i-ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog + RISC-V GNU toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog gcc-riscv64-unknown-elf device-tree-compiler
+
+      - name: Cache Spike (riscv-isa-sim)
+        id: cache-spike
+        uses: actions/cache@v4
+        with:
+          path: ~/spike-install
+          key: spike-v1.1.1-${{ runner.os }}
+
+      - name: Build Spike
+        if: steps.cache-spike.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/riscv-software-src/riscv-isa-sim.git
+          cd riscv-isa-sim && mkdir build && cd build
+          ../configure --prefix=$HOME/spike-install
+          make -j$(nproc)
+          make install
+
+      - name: Add Spike to PATH
+        run: echo "$HOME/spike-install/bin" >> "$GITHUB_PATH"
+
+      - name: Assemble tests (RISC-V GNU toolchain)
+        working-directory: sim
+        run: make hex
+
+      - name: Run RTL tests + check PASS (tohost)
+        working-directory: sim
+        run: make all
+
+      - name: Lockstep equivalence vs Spike (golden model)
+        working-directory: sim
+        run: make equiv
+
+      - name: Upload waveforms
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rv32i-waves
+          path: sim/*.vcd
+          if-no-files-found: ignore
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Lint RTL
+        working-directory: sim
+        run: make lint

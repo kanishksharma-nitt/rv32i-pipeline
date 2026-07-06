@@ -1,0 +1,10 @@
+../rtl/riscv_pkg.sv
+../rtl/regfile.sv
+../rtl/alu.sv
+../rtl/imm_gen.sv
+../rtl/control.sv
+../rtl/hazard_unit.sv
+../rtl/forwarding_unit.sv
+../rtl/riscv_core.sv
+../rtl/riscv_soc.sv
+../tb/tb_riscv.sv

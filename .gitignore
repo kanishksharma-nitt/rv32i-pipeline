@@ -1,0 +1,14 @@
+sim/*.vvp
+sim/*.vcd
+sim/*.dump
+sim/*.spike.log
+sim/obj_dir/
+tests/hex/*.elf
+tests/hex/*.bin
+scripts/legacy/assembler
+scripts/legacy/assembler.exe
+scripts/legacy/iss
+scripts/legacy/iss.exe
+scripts/__pycache__/
+**/*.vcd
+docs/img/
